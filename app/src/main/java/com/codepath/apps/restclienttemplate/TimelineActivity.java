@@ -25,6 +25,8 @@ public class TimelineActivity extends AppCompatActivity {
     List<Tweet> tweets;
     TweetsAdapter adapter;
     SwipeRefreshLayout swipeContainer;
+    EndlessRecyclerViewScrollListener scrollListener;
+
     public static final String Tag = "TimeLineActivity";
 
     @Override
@@ -51,9 +53,41 @@ public class TimelineActivity extends AppCompatActivity {
 
         tweets = new ArrayList<>();
         adapter = new TweetsAdapter(this,tweets);
-        rvTweets.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        rvTweets.setLayoutManager(layoutManager);
         rvTweets.setAdapter(adapter);
+
+        scrollListener = new EndlessRecyclerViewScrollListener(layoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                Log.i(Tag,"onLoadMore " + page);
+                loadMoreData();
+            }
+        };
+
+        rvTweets.addOnScrollListener(scrollListener);
+
         populateHomeTimeLine();
+    }
+
+    private void loadMoreData() {
+        client.getNextPagesOfTweets(new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Headers headers, JSON json) {
+                Log.i(Tag,"Onsuccess! for load more data" + json.toString());
+                JSONArray jsonArray = json.jsonArray;
+                try {
+                    adapter.addAll(Tweet.fromJsonArray(jsonArray));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
+                Log.e(Tag,"Onfailure for loadMoreData!" ,throwable);
+            }
+        },tweets.get(tweets.size()-1).id);
     }
 
     private void populateHomeTimeLine(){
@@ -65,7 +99,7 @@ public class TimelineActivity extends AppCompatActivity {
                 try {
                     adapter.clear();
                     adapter.addAll(Tweet.fromJsonArray(jsonArray));
-                    adapter.notifyDataSetChanged();
+                    //adapter.notifyDataSetChanged();
                     swipeContainer.setRefreshing(false);
                 } catch (JSONException e) {
                     Log.e(Tag,"Json Exception",e);
