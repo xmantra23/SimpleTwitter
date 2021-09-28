@@ -11,6 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CenterInside;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.codepath.apps.restclienttemplate.models.Tweet;
 
 import org.w3c.dom.Text;
@@ -78,6 +80,7 @@ public class TweetsAdapter extends  RecyclerView.Adapter<TweetsAdapter.ViewHolde
             tvTimeStamp.setText(tweet.getFormattedTimestamp());
             Glide.with(context)
                     .load(tweet.user.profileImageUrl)
+                    .transform(new CenterInside(),new RoundedCorners(24))
                     .into(ivProfileImage);
         }
     }
